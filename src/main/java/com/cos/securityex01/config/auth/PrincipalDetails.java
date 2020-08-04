@@ -12,69 +12,79 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.cos.securityex01.model.User;
 
-import lombok.Data;
 
-// Authentication 객체에 저장할 수 있는 유일한 타입 → 세션에 담음
-@Data
+//Authentication 객체에 저장할 수 있는 유일한 타입이다.
 public class PrincipalDetails implements UserDetails, OAuth2User {
 
-	private User user;
+private User user;
+private Map<String, Object> attributes;
 
-	private Map<String, Object> attributes; // 뭘 받을지 모르니까 Object로 설정
+public PrincipalDetails(User user) { // 생성자
+   super();
+   this.user = user;
+}
 
-	public PrincipalDetails(User user) {
-		super();
-		this.user = user;
-	}
+// OAuth2.0 로그인시 사용
+public PrincipalDetails(User user, Map<String, Object> attributes) {
+   this.user = user;
+   this.attributes = attributes;
+}
 
-	@Override
-	public String getPassword() {
-		return user.getPassword();
-	}
+public User getUser() {
+   return user;
+}
 
-	@Override
-	public String getUsername() {
-		return user.getUsername();
-	}
+public void setUser(User user) {
+   this.user = user;
+}
 
-	@Override
-	public boolean isAccountNonExpired() {
-		return true;
-	}
+@Override
+public String getPassword() {
+   return user.getPassword();
+}
 
-	@Override
-	public boolean isAccountNonLocked() { // 비밀번호 5번 이상 틀리면 Lock 걸리게 할 때
-		return true;
-	}
+@Override
+public String getUsername() {
+   return user.getUsername();
+}
 
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return true;
-	}
+@Override
+public boolean isAccountNonExpired() { // 계정이 만료됐는지 확인함
+   return true; // 최종 접속시간 확인해서 1년 지났으면 false 넣어야함.
+}
 
-	@Override
-	public boolean isEnabled() { // 계정 활성화 되어있는지 확인할 때
-		return true;
-	}
+@Override
+public boolean isAccountNonLocked() { // 계정이 잠겼는지 확인
+   return true; // 비밀번호 5번이상 틀리면 false 넣어주면 됨.
+}
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() { // 권한
-		List<GrantedAuthority> authorities = new ArrayList<>();
-		authorities.add(new SimpleGrantedAuthority(user.getRole()));
-		System.out.println("PrincipalDetails 확인 : " + authorities);
-		return authorities;
-	}
+@Override
+public boolean isCredentialsNonExpired() {
+   return true;
+}
 
-	// 리소스 서버로부터 받는 회원정보
-	@Override
-	public Map<String, Object> getAttributes() { // OAuth2User 타입에 Map 으로 데이터를 넣어주기 때문에 getAttributes 해서 꺼내어 쓴다.
-		return attributes;
-	}
+@Override
+public boolean isEnabled() {
+   return true;
+}
 
-	// ID 값
-	@Override
-	public String getName() { // OAuth2User 타입
-		return "제공자 ID";
-	}
+@Override
+public Collection<? extends GrantedAuthority> getAuthorities() { // 권한 확인
+   List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+   authorities.add(new SimpleGrantedAuthority(user.getRole()));
+   System.out.println("PrincipalDetail 확인 : " +authorities);
+   return authorities; // 여기 유저 정보 전부 다 리턴 
+}
+
+// OAuth(리소스) 서버로부터 받는 회원정보
+@Override
+public Map<String, Object> getAttributes() { // 회원정보를 리턴한다.
+   return attributes;
+}
+
+@Override
+public String getName() {
+   return "제공자 ID";
+}
 
 }
